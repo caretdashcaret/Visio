@@ -12,4 +12,16 @@ body {
 	display: block;
 	margin-left: auto;
     margin-right: auto;
+    text-align: center;
 }
+.smallfont{
+	font-size: 14px;
+}
+a:link {
+	color:black;
+	font-family: Courier;
+}
+a:visited {
+	color:gray;
+	font-family: Courier;
+} 

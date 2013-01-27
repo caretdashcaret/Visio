@@ -14,12 +14,13 @@ wizardSprite2.src = "images/wizard2.png";
 wizardSprite3.src = "images/wizard3.png"; 
 wizardSprite4.src = "images/wizard4.png"; 
 var wizardSpriteSet = [wizardSprite1,wizardSprite2,wizardSprite3,wizardSprite4];
-//var personSprite = new Image();
-//personSprite.src = "images/person.png";
-var introImage = new Image();
-introImage.src="images/intro.png";
-var hintImage = new Image();
-hintImage.src ="images/hint.png";
+var startImage = new Image();
+startImage.src="images/start.png";
+var introImage1 = new Image();
+introImage1.src ="images/intro1.png";
+var introImage2 = new Image();
+introImage2.src="images/intro2.png";
+var introImageSet = [introImage1, introImage2];
 
 var wizards = [];
 var peasants = [];
@@ -37,24 +38,19 @@ var introCounter = 0;
 
 var score = 0;
 
+var currentGameLoop = 0;
+var FPS=30;
+
+var introWaitTimer = 0;
+var currentIntroImage = 0;
+
 function gameInit(){
  	canvas.addEventListener('click', clickReporter, false);
-	//game loop
-	var FPS = 30;
-	loadIntro()
 	setInterval(
 		function(){
-			if (introClicked){
-				introCounter += 1;
-				if (introCounter > 60){
-					intro=false;
-				}
-			}
-			if (intro==false) {
 				update();
 				draw();
 				write();
-			}
 		},
 		1000/FPS
 	);
@@ -251,15 +247,7 @@ function Peasant(I){
 function clickReporter(e) {
 	var x = e.clientX;
 	x -= canvas.offsetLeft;
-	
-	if (intro){
-		if (x>500){
-			context.clearRect(0,0,canvas.width, canvas.height);
-			context.drawImage(introImage,0,0);
-			introClicked = true;
-		}
-	}
-	else {
+
 		var uncovered_wizard_this_click = false;
 		var number_of_wizards_uncovered = 0;
     	wizards.forEach(function(wizard) {
@@ -288,8 +276,71 @@ function clickReporter(e) {
      	//		console.log(peasant.wizardX);
      	//	}
      	//});
-	}
 
 }
 
-gameInit();
+
+//game intro
+function gameIntro(){
+	currentGameLoop = setInterval(
+		function(){
+			updateIntro();
+			drawIntro();
+		},
+		1000/FPS
+	);
+	canvas.addEventListener("click",introClickListener,false);
+}
+//animates the intro
+function updateIntro(){
+	introWaitTimer += 1
+	if ((introWaitTimer%5==0)&&(introWaitTimer>200)){
+		currentIntroImage = (currentIntroImage+1)%2
+	} 
+}
+function drawIntro(){
+	context.clearRect(0,0,canvas.width, canvas.height);
+	context.drawImage(introImageSet[currentIntroImage],0,0);
+}
+function drawStart(){
+	context.clearRect(0,0,canvas.width, canvas.height);
+	context.drawImage(startImage,0,0);
+}
+function introClickListener(e){
+	var coord = coordOnCanvas(e);
+	var x = coord[0];
+	var y = coord[1];
+	console.log(coord);
+	//hardcoded coords of where the start is, on canvas
+	console.log(withinRange(x,635,675));
+	console.log(withinRange(y,180,240));
+	if (withinRange(x,635,740)){
+		if (withinRange(y,180,240)){
+			drawStart();
+			unhookIntro();
+			setTimeout(gameInit(), 2000);
+		}
+	}
+	
+}
+
+//changes the game loop and canvas mouse listener
+function unhookIntro(){
+	clearInterval(currentGameLoop);
+	canvas.removeEventListener("click", introClickListener, false);
+}
+
+function withinRange(value, min, max){
+	return ((value>min)&&(value<max))
+}
+//computes the offset to get coord on canvas
+//using floor because the x offset has a 0.5, odd
+function coordOnCanvas(e){
+	var offset = canvas.getBoundingClientRect();
+	var x = Math.floor(e.clientX - offset.left);
+	var y = Math.floor(e.clientY - offset.top);
+	return [x,y]
+}
+
+gameIntro();
+
