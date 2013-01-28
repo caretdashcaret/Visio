@@ -17,6 +17,9 @@ body {
 .smallfont{
 	font-size: 14px;
 }
+.xtrasmallfont{
+	font-size: 12px;
+}
 a:link {
 	color:black;
 	font-family: Courier;
