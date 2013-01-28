@@ -1,4 +1,7 @@
 var canvas = document.getElementById("gameCanvas");
+//for focusing for debugging
+canvas.setAttribute('tabindex', '0');
+canvas.focus();
 var context = canvas.getContext("2d");
 
 //load wizard sprites
@@ -46,7 +49,8 @@ var reactSpriteSet=[reactSprite1,reactSprite2,reactSprite3,reactSprite4,reactSpr
 var wizards = [];
 var peasants = [];
 
-var CANVAS_GROUND = 230;
+var CANVAS_GROUND_FOR_WIZARD = 230;
+var CANVAS_GROUND_FOR_PEASANT = 200;
 var MAX_SPEED = 7;
 var TOLERANCE = 30;
 var SELF_TOLERANCE = 20;
@@ -61,11 +65,17 @@ var currentIntroImage = 0;
 var score = 0;
 var ESCAPED_WIZARD_SCORE = -200;
 var WIZARD_UNCOVERED_SCORE = 100;
-var MISCLICK_SCORE = -50;
+var MISCLICK_SCORE = -10;
+
+//for debugging
+var debug = false;
 
 function gameInit(){
- 	currentGameLoop = canvas.addEventListener('click', gameClickListener, false);
-	setInterval(
+ 	canvas.addEventListener('click', gameClickListener, false);
+ 	//for debugging/testing
+ 	canvas.addEventListener('keydown',debugPressListener,false);
+ 	console.log('hi');
+	currentGameLoop = setInterval(
 		function(){
 				update();
 				draw();
@@ -138,7 +148,7 @@ function Wizard(I){
 	I.active = true;
 	
 	I.x = 0;
-	I.y = CANVAS_GROUND;
+	I.y = CANVAS_GROUND_FOR_WIZARD;
 	
 	
 	I.height = 50;
@@ -167,7 +177,6 @@ function Wizard(I){
 	I.drawUncovered = function (){
 		I.spriteCounter = I.spriteCounter%4;
 		context.drawImage(wizardSpriteSet[I.spriteCounter], I.x, I.y);
-		//context.drawImage(wizardSprite1,I.x,I.y);
 	}
 	
 	I.update = function (){
@@ -193,7 +202,7 @@ function Peasant(I){
 	I.active = true;
 	
 	I.x = 0;
-	I.y = CANVAS_GROUND;
+	I.y = CANVAS_GROUND_FOR_PEASANT;
 	
 	I.height = 50;
 	I.width = 32+Math.floor(Math.random()*52);
@@ -210,21 +219,25 @@ function Peasant(I){
 	I.time = 0;
 	
 	I.draw = function () {
-		//context.fillStyle = "black";
-		//context.strokeRect(I.x,I.y,35,35);
-		//context.drawImage(wizardSprite1, I.x, I.y);
-		//context.drawImage(personSprite, I.x, I.y);
-		I.spriteCounter = I.spriteCounter%5;
-		context.drawImage(personSpriteSet[I.spriteCounter], I.x, I.y);
+		if (debug){
+			context.fillStyle = "black";
+			context.strokeRect(I.x,I.y+30,35,35);
+		}
+		else{
+			I.spriteCounter = I.spriteCounter%5;
+			context.drawImage(personSpriteSet[I.spriteCounter], I.x, I.y);
+		}
 	}
 	
 	I.react = function () {
-		//context.fillStyle = "black";
-		//context.fillRect(I.x,I.y,35,35);
-		//context.drawImage(wizardSprite2,I.x,I.y);
-		//context.drawImage(reactSprite, I.x,I.y-51);
-		I.spriteCounter = I.spriteCounter%5;
-		context.drawImage(reactSpriteSet[I.spriteCounter], I.x, I.y-31);
+		if (debug){
+			context.fillStyle = "black";
+			context.fillRect(I.x,I.y+30,35,35);
+		}
+		else{
+			I.spriteCounter = I.spriteCounter%5;
+			context.drawImage(reactSpriteSet[I.spriteCounter], I.x, I.y);
+		}
 	}
 	
 	I.wizard = 1;
@@ -236,6 +249,10 @@ function Peasant(I){
 		var timedReaction = false;
 		var wiz = null;
 		var wizX = 0;
+		I.time += 1;
+		if (I.time%(9-I.speed)==0){
+			I.spriteCounter += 1
+		};
 		wizards.forEach(function(wizard) {
 			//checks for an odd case of still reaction when the wizard has gone off the screen
 			//happens only at the begining
@@ -247,10 +264,6 @@ function Peasant(I){
 				}
 			}
 		I.reaction = timedReaction;
-		I.time += 1;
-		if (I.time%10==0){
-			I.spriteCounter += 1
-		};
 		I.wizard = wiz;
 		I.wizardX = wizX;
 		});
@@ -265,6 +278,8 @@ function Peasant(I){
 
 
 function gameClickListener(e) {
+	canvas.focus();
+	
 	var uncovered_wizard_this_click = false;
 	var number_of_wizards_uncovered = 0;
 	
@@ -287,9 +302,6 @@ function gameClickListener(e) {
     }
     peasants.forEach(function(peasant){
     	if (Math.abs(x-peasant.x) <= TOLERANCE){
-    		console.log("peasant x");
-    		console.log(peasant.time);
-    		console.log(peasant.spriteCounter);
     //		console.log(peasant.x);
     //		console.log("reaction");
     //		console.log(peasant.reaction);
@@ -300,6 +312,19 @@ function gameClickListener(e) {
      		}
     });
 
+}
+
+//toggles between the rectangles and walking people
+function debugPressListener(e){
+	console.log("pressed");
+	if (e.keyCode==68){
+		if (debug){
+			debug = false;
+		}
+		else{
+			debug = true;
+		}
+	}
 }
 
 
